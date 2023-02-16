@@ -1,12 +1,24 @@
 from langchain.agents import load_tools, initialize_agent, Tool, tool
 from langchain.llms import OpenAI
 from gpt_index import GPTSimpleVectorIndex, download_loader
+import requests
 
 @tool
 def my_custom_tool(query: str) -> str:
     """Reverses the contents of the string."""
     # Reverse the string
     return query[::-1]
+
+@tool
+def get_random_dad_joke(query: str) -> str:
+    """Returns a random dad joke."""
+    response = requests.get("https://icanhazdadjoke.com/", headers={"Accept": "application/json"})
+    if response.status_code == 200:
+        json_data = response.json()
+        return json_data["joke"]
+    else:
+        return "Sorry, I couldn't get a joke right now. Please try again later."
+
 
 # Check if daIndx.json exists, and if so, load it.
 # Otherwise, create a new index.
@@ -53,6 +65,16 @@ strReverseTool = Tool(
     )
 
 tools.append(strReverseTool)
+
+# Let's add a tool that returns a random dad joke.
+dadJokeTool = Tool(
+        name = "Dad Joke",
+        func=get_random_dad_joke,
+        description="Returns a random dad joke.",
+        return_direct=True
+    )
+
+tools.append(dadJokeTool)
 
 # Finally, let's initialize an agent with the tools, the language model, and the type of agent we want to use.
 agent = initialize_agent(tools, llm, agent="zero-shot-react-description", verbose=True)
