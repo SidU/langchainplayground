@@ -1,6 +1,12 @@
-from langchain.agents import load_tools, initialize_agent, Tool
+from langchain.agents import load_tools, initialize_agent, Tool, tool
 from langchain.llms import OpenAI
 from gpt_index import GPTSimpleVectorIndex, download_loader
+
+@tool
+def my_custom_tool(query: str) -> str:
+    """Reverses the contents of the string."""
+    # Reverse the string
+    return query[::-1]
 
 # Check if daIndx.json exists, and if so, load it.
 # Otherwise, create a new index.
@@ -37,6 +43,16 @@ gptIndexTool = Tool(
     )
 
 tools.append(gptIndexTool)
+
+# Let's add a tool that reverses the input.
+strReverseTool = Tool(
+        name = "String Reverse Custom Tool",
+        func=my_custom_tool,
+        description="reverses the input string",
+        return_direct=True
+    )
+
+tools.append(strReverseTool)
 
 # Finally, let's initialize an agent with the tools, the language model, and the type of agent we want to use.
 agent = initialize_agent(tools, llm, agent="zero-shot-react-description", verbose=True)
